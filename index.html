@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naveen AI - Chatbot</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <header>
+    <h1>Naveen AI - Chatbot</h1>
+    <button id="dark-mode-toggle">🌙</button> <!-- Dark Mode Toggle -->
+  </header>
+
+  <div class="chat-container">
+    <div class="chat-box" id="chat-box">
+      <p class="bot-message">Hello! Ask me anything.</p>
+    </div>
+
+    <div id="typing-indicator" class="hidden">
+      <p>Bot is typing...</p>
+    </div>
+
+    <div class="input-container">
+      <input type="text" id="user-input" placeholder="Type a message..." autocomplete="off">
+      <button id="send-btn">Send</button>
+      <button id="voice-btn">🎤</button>
+    </div>
+  </div>
+
+  <!-- Contact Section -->
+  <section id="contact">
+    <h2>Contact Me</h2>
+    <button id="contact-btn" class="neon-button">Contact Me</button>
+  </section>
+
+  <!-- Modal for Contact Information -->
+  <div id="contact-modal" class="modal">
+    <div class="modal-content">
+      <span id="close-modal" class="close">&times;</span>
+      <h3>Contact Information</h3>
+      <p>Email: <a href="mailto:chakalinaveen4201@gmail.com">chakalinaveen4201@gmail.com</a></p>
+      <p>LinkedIn: <a href="https://linkedin.com/in/chakali-naveen" target="_blank">linkedin.com/in/chakali-naveen</a></p>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

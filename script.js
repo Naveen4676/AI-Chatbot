@@ -120,3 +120,38 @@ window.addEventListener("click", (event) => {
   if (event.target == modal) {
     modal.style.display = "none";
   }});
+  // Create a SpeechSynthesis instance
+const synth = window.speechSynthesis;
+let utterance = null;
+
+// Function to read the chatbot response
+function speakText(text) {
+    // Stop any ongoing speech
+    if (synth.speaking) {
+        synth.cancel();
+    }
+
+    // Create a new utterance
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US'; // Change language if needed
+    utterance.rate = 1.0; // Adjust speed (1.0 is normal)
+    utterance.pitch = 1.0; // Adjust pitch (1.0 is normal)
+
+    // Speak the text
+    synth.speak(utterance);
+}
+
+// Event listener for chatbot response click
+document.addEventListener("click", (event) => {
+    if (event.target.classList.contains("chatbot-response")) {
+        const text = event.target.textContent;
+        speakText(text);
+    }
+});
+
+// Event listener to stop speech when user types a new message
+document.querySelector("#user-input").addEventListener("input", () => {
+    if (synth.speaking) {
+        synth.cancel();
+    }
+});

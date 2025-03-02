@@ -1,4 +1,4 @@
-const API_URL = "https://naveen-ai-chatbot.onrender.com/chat"; // Replace with your actual Render backend URL
+const API_URL = "https://node-backend-fm9h.onrender.com/chat"; // Replace with your actual Render backend URL
 
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");

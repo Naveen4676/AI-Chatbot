@@ -18,3 +18,18 @@ async function fetchBotResponse(userMessage) {
       console.error("Chatbot Error:", error);
   }
 }
+document.addEventListener("DOMContentLoaded", function () {
+  const contactModal = document.getElementById("contactModal");
+  const closeModal = document.getElementById("closeModal");
+
+  closeModal.addEventListener("click", function () {
+      contactModal.style.display = "none";
+  });
+
+  // Close modal when clicking outside of it
+  window.addEventListener("click", function (event) {
+      if (event.target === contactModal) {
+          contactModal.style.display = "none";
+      }
+  });
+});

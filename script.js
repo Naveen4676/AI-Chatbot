@@ -1,35 +1,35 @@
-async function fetchBotResponse(userMessage) {
-  try {
-      const response = await fetch("https://node-backend-fm9h.onrender.com/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: userMessage }),
-      });
-
-      if (!response.ok) {
-          throw new Error(`Server responded with ${response.status}`);
-      }
-
-      const data = await response.json();
-      addMessage(data.reply || "⚠️ No response received.", "bot-message");
-
-  } catch (error) {
-      addMessage("❌ Error connecting to AI!", "bot-message");
-      console.error("Chatbot Error:", error);
-  }
-}
-document.addEventListener("DOMContentLoaded", function () {
-  const contactModal = document.getElementById("contactModal");
-  const closeModal = document.getElementById("closeModal");
-
-  closeModal.addEventListener("click", function () {
-      contactModal.style.display = "none";
-  });
-
-  // Close modal when clicking outside of it
-  window.addEventListener("click", function (event) {
-      if (event.target === contactModal) {
-          contactModal.style.display = "none";
-      }
-  });
+document.getElementById("send-btn").addEventListener("click", sendMessage);
+document.getElementById("user-input").addEventListener("keypress", function (e) {
+    if (e.key === "Enter") sendMessage();
 });
+
+function sendMessage() {
+    const userInput = document.getElementById("user-input").value;
+    if (!userInput) return;
+
+    const chatBox = document.getElementById("chat-box");
+    chatBox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+
+    fetch("http://localhost:10000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userInput }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        chatBox.innerHTML += `<p><strong>AI:</strong> ${data.reply}</p>`;
+        document.getElementById("user-input").value = "";
+    })
+    .catch(error => console.error("Error:", error));
+}
+
+// Contact Modal Logic
+const contactBtn = document.getElementById("contact-btn");
+const contactModal = document.getElementById("contact-modal");
+const closeModal = document.querySelector(".close");
+
+contactBtn.onclick = () => contactModal.style.display = "block";
+closeModal.onclick = () => contactModal.style.display = "none";
+window.onclick = (event) => {
+    if (event.target === contactModal) contactModal.style.display = "none";
+};

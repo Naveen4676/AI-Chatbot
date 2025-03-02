@@ -77,8 +77,8 @@ async function fetchBotResponse(userMessage) {
 
     const data = await response.json();
     if (data.reply) {
-      addMessage(data.reply, "bot-message");
-      speakResponse(data.reply); // Text-to-Speech: Bot speaks the reply
+      let botMessage = addMessage(data.reply, "bot-message");
+      speakText(data.reply); // Text-to-Speech: Bot speaks the reply
     } else {
       addMessage("⚠️ No response received. Check API!", "bot-message");
     }
@@ -90,42 +90,32 @@ async function fetchBotResponse(userMessage) {
 }
 
 // Text-to-Speech (Bot speaks)
-  // Create a SpeechSynthesis instance
-  const synth = window.speechSynthesis;
-  let utterance = null;
-  
-  // Function to read the chatbot response
-  function speakText(text) {
-      // Stop any ongoing speech
-      if (synth.speaking) {
-          synth.cancel();
-      }
-  
-      // Create a new utterance
-      utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US'; // Change language if needed
-      utterance.rate = 1.0; // Adjust speed (1.0 is normal)
-      utterance.pitch = 1.0; // Adjust pitch (1.0 is normal)
-  
-      // Speak the text
-      synth.speak(utterance);
+const synth = window.speechSynthesis;
+
+function speakText(text) {
+  if (synth.speaking) {
+    synth.cancel();
   }
-  
-  // Event listener for chatbot response click
-  document.addEventListener("click", (event) => {
-      if (event.target.classList.contains("chatbot-response")) {
-          const text = event.target.textContent;
-          speakText(text);
-      }
-  });
-  
-  // Event listener to stop speech when user types a new message
-  document.querySelector("#user-input").addEventListener("input", () => {
-      if (synth.speaking) {
-          synth.cancel();
-      }
-  });
-  
+  let utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'en-US';
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  synth.speak(utterance);
+}
+
+// Event listener for chatbot response click
+document.addEventListener("click", (event) => {
+  if (event.target.classList.contains("bot-message")) {
+    speakText(event.target.textContent);
+  }
+});
+
+// Event listener to stop speech when user types a new message
+userInput.addEventListener("input", () => {
+  if (synth.speaking) {
+    synth.cancel();
+  }
+});
 
 // Contact Modal Functionality
 const contactBtn = document.getElementById("contact-btn");
@@ -147,4 +137,5 @@ if (closeModal) {
 window.addEventListener("click", (event) => {
   if (event.target == modal) {
     modal.style.display = "none";
-  }});
+  }
+});

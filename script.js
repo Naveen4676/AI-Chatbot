@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:10000/chat"; // Change this when deploying
+const API_URL = "https://your-render-backend.onrender.com/chat";
+ // Change this for deployment
 
 const chatBox = document.getElementById("chat-box");
 const userInput = document.getElementById("user-input");

@@ -1,107 +1,122 @@
-const express = require("express");
-const cors = require("cors");
-const axios = require("axios");
-require("dotenv").config();
+const API_URL = "https://naveen-ai-chatbot.onrender.com/chat"; // Replace with your actual Render backend URL
 
-const app = express();
-app.use(express.json());
-app.use(cors({ origin: "*" })); // Allow all origins
+const chatBox = document.getElementById("chat-box");
+const userInput = document.getElementById("user-input");
+const sendBtn = document.getElementById("send-btn");
+const voiceBtn = document.getElementById("voice-btn");
 
-// Keep-Alive settings to reduce latency
-const http = require("http");
-const server = http.createServer(app);
-server.keepAliveTimeout = 60000; // 60 seconds
-
-app.post("/chat", async (req, res) => {
-    const userMessage = req.body.message;
-
-    if (!userMessage) {
-        return res.status(400).json({ reply: "Message cannot be empty!" });
-    }
-
-    try {
-        // Start timing the API call
-        console.time("API Response Time");
-
-        // Send request to Gemini API
-        const response = await axios.post(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.0-pro-vision-latest:generateMessage?key=${process.env.GEMINI_API_KEY}`,
-            {
-                contents: [{ role: "user", parts: [{ text: userMessage }] }],
-            },
-            { timeout: 5000 } // Set a timeout of 5 seconds
-        );
-
-        // Extract response faster
-        const botReply = response.data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Sorry, I didn't get that.";
-
-        console.timeEnd("API Response Time"); // End timing
-        res.json({ reply: botReply });
-    } catch (error) {
-        console.error("Error:", error.message);
-        res.status(500).json({ reply: "⚠️ API Error: Please try again later." });
-    }
+// Dark Mode (Optional Toggle, if desired)
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+darkModeToggle.addEventListener("click", () => {
+  document.body.classList.toggle("dark-mode");
 });
 
-// Start the server with optimized Keep-Alive
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-document.addEventListener("DOMContentLoaded", loadChatHistory);
+// Send message when Send button is clicked
+sendBtn.addEventListener("click", () => {
+  let userMessage = userInput.value.trim();
+  if (userMessage !== "") {
+    addMessage(userMessage, "user-message");
+    userInput.value = "";
+    fetchBotResponse(userMessage);
+  }
+});
 
-async function sendMessage() {
-    const userInput = document.getElementById("user-input").value;
-    if (!userInput.trim()) return;
+// Allow "Enter" key to send message
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    sendBtn.click();
+  }
+});
 
-    appendMessage("User", userInput, "user-message");
-    document.getElementById("user-input").value = "";
+// Voice Input (Speech-to-Text)
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = new SpeechRecognition();
+recognition.continuous = false;
+recognition.interimResults = false;
 
-    // Add Typing Indicator
-    appendMessage("Bot", "Typing...", "bot-message", "typing");
+voiceBtn.addEventListener("click", () => {
+  recognition.start();
+});
 
-    try {
-        const response = await fetch("http://localhost:5000/chat", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: userInput })
-        });
+recognition.onresult = (event) => {
+  const transcript = event.results[0][0].transcript;
+  userInput.value = transcript;
+  sendBtn.click();
+};
 
-        const data = await response.json();
-        removeTypingIndicator();
-        appendMessage("Bot", data.reply, "bot-message");
-
-        saveToLocalStorage(userInput, data.reply);
-    } catch (error) {
-        console.error("Error:", error);
-        removeTypingIndicator();
-        appendMessage("Bot", "⚠️ Unable to fetch response.", "bot-message");
-    }
+// Function to add messages to the chat box
+function addMessage(text, className) {
+  let message = document.createElement("p");
+  message.className = className;
+  message.textContent = text;
+  chatBox.appendChild(message);
+  chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-function appendMessage(sender, message, className, id = "") {
-    const chatBox = document.getElementById("chat-box");
-    const messageDiv = document.createElement("div");
-    messageDiv.classList.add("message", className);
-    if (id) messageDiv.id = id;
-    messageDiv.innerText = message;
-    chatBox.appendChild(messageDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
+// Typing Indicator
+function showTypingIndicator() {
+  let typingIndicator = document.createElement("p");
+  typingIndicator.className = "typing-indicator";
+  typingIndicator.textContent = "Bot is typing...";
+  chatBox.appendChild(typingIndicator);
+  return typingIndicator;
 }
 
-function removeTypingIndicator() {
-    const typingIndicator = document.getElementById("typing");
-    if (typingIndicator) typingIndicator.remove();
-}
+// Fetch response from backend and update chat box
+async function fetchBotResponse(userMessage) {
+  const typingIndicator = showTypingIndicator();
 
-function saveToLocalStorage(userMsg, botMsg) {
-    let chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-    chatHistory.push({ user: userMsg, bot: botMsg });
-    localStorage.setItem("chatHistory", JSON.stringify(chatHistory));
-}
-
-function loadChatHistory() {
-    const chatHistory = JSON.parse(localStorage.getItem("chatHistory")) || [];
-    chatHistory.forEach(chat => {
-        appendMessage("User", chat.user, "user-message");
-        appendMessage("Bot", chat.bot, "bot-message");
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: userMessage }),
     });
+
+    chatBox.removeChild(typingIndicator);
+
+    const data = await response.json();
+    if (data.reply) {
+      addMessage(data.reply, "bot-message");
+      speakResponse(data.reply); // Text-to-Speech: Bot speaks the reply
+    } else {
+      addMessage("⚠️ No response received. Check API!", "bot-message");
+    }
+  } catch (error) {
+    chatBox.removeChild(typingIndicator);
+    addMessage("❌ Error connecting to AI. Check console!", "bot-message");
+    console.error("Chatbot Error:", error);
+  }
 }
+
+// Text-to-Speech (Bot speaks)
+function speakResponse(text) {
+  const speech = new SpeechSynthesisUtterance();
+  speech.text = text;
+  speech.lang = "en-US";
+  speech.rate = 1;
+  speech.pitch = 1;
+  window.speechSynthesis.speak(speech);
+}
+
+// Contact Modal Functionality
+const contactBtn = document.getElementById("contact-btn");
+const modal = document.getElementById("contact-modal");
+const closeModal = document.getElementById("close-modal");
+
+if (contactBtn) {
+  contactBtn.addEventListener("click", () => {
+    modal.style.display = "block";
+  });
+}
+
+if (closeModal) {
+  closeModal.addEventListener("click", () => {
+    modal.style.display = "none";
+  });
+}
+
+window.addEventListener("click", (event) => {
+  if (event.target == modal) {
+    modal.style.display = "none";
+  }});

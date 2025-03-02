@@ -1,4 +1,4 @@
-const API_URL = "https://your-render-backend.onrender.com/chat";
+const API_URL = "https://node-backend-fm9h.onrender.com/chat";
  // Change this for deployment
 
 const chatBox = document.getElementById("chat-box");
